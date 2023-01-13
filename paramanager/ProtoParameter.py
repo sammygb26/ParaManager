@@ -1,6 +1,9 @@
 from .Parameter import Parameter
 
-ALLOWED_CHARS = [chr(i + 97) for i in range(26)] + [chr(i + 65) for i in range(26)] + ["_"]
+ALLOWED_CHARS = [chr(i + 97) for i in range(26)] + \
+                [chr(i + 65) for i in range(26)] + \
+                [str(i) for i in range(10)] + \
+                ["_"]
 
 
 def matches_allowed_chars(string: str):
