@@ -74,6 +74,16 @@ class ParameterSet:
         for p in self.proto_parameters:
             self.parameters[p.name] = p()
 
+    def get_unset_required_proto_parameters(self):
+        return [p for p in self.proto_parameters if p.required and not p.set]
+
+    def check_unset_parameters(self):
+        unset_required = self.get_unset_required_proto_parameters()
+        if unset_required:
+            for p in unset_required:
+                print(f"{p.name} not set, can use pseudonyms {p.pseudonyms}")
+            raise ValueError(f"Required parameters '{[p.name for p in unset_required]}' not set.")
+
     def put(self, name: str, val: str):
         for p in self.proto_parameters:
             if name not in p.pseudonyms:
@@ -99,17 +109,22 @@ class ParameterSet:
         file.write("!\n")
         file.close()
 
-    def read_argv(self):
-        args = sys.argv[1:]
+    def read_argv(self, args=None, check_unset_parameters: bool = True):
+        if args is None:
+            args = sys.argv[1:]
         for name, val in [(args[i], args[i+1]) for i in range(0, len(args), 2)]:
             if name == "-read":
-                self.read_file(val)
+                self.read_file(val, False)
             if name == "-version":
                 self.read_version.set_value(val)
 
             if not name.startswith("-"):
                 continue
             self.put(name.removeprefix("-"), val)
+
+        if check_unset_parameters:
+            self.check_unset_parameters()
+
 
     def read_line(self, line: str):
         line.replace(" ", "")
@@ -121,7 +136,7 @@ class ParameterSet:
 
         self.put(*line.split(":"))
 
-    def read_file(self, filename: str):
+    def read_file(self, filename: str, check_unset_parameters: bool = True):
         lines = read_file_lines(filename)
         if not lines:
             print(f"Attempt to read empty/nonexistent file '{filename}'")
@@ -133,3 +148,6 @@ class ParameterSet:
             if is_end_line(line):
                 return
             self.read_line(line)
+
+        if check_unset_parameters:
+            self.check_unset_parameters()

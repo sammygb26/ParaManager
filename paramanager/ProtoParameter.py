@@ -11,22 +11,26 @@ def matches_allowed_chars(string: str):
 
 
 class ProtoParameter:
-    def __init__(self, name: str, default_value, parser=float, pseudonyms: list[str] = [], required=False):
-        self.name = name
+    def __init__(self, name: str, default_value, parser=float, pseudonyms: list[str] = [], required: bool = False):
+        self.name: str = name
         self.value = default_value
         self.parser = parser
-        self.pseudonyms = pseudonyms + [name]
+        self.required: bool = required
+        self.set = False
+        self.pseudonyms: list[str] = pseudonyms + [name]
 
         if any(not matches_allowed_chars(name) for name in self.pseudonyms):
             raise ValueError("name or pseudonym contains illegal character (not letters or '_')")
 
     def __call__(self):
-
+        if self.required and not self.set:
+            return None
         return Parameter(self.name, self.value)
 
     def set_value(self, string):
         try:
             self.value = self.parser(string)
+            self.set = True
         except ValueError:
             print(f"ValueError when parsing '{string}' for '{self.name}'")
             return
