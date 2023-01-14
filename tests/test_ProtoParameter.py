@@ -1,20 +1,15 @@
 import paramanager as pm
-
-
-def assert_value_exception(f, exception_expected=True):
-    try:
-        f()
-        assert not exception_expected
-    except ValueError:
-        assert exception_expected
+import pytest
 
 
 def test_default_allowed_chars():
-    assert_value_exception(lambda: pm.ProtoParameter("This has spaces so should fail", 0.0))
+    with pytest.raises(ValueError):
+        pm.ProtoParameter("This has spaces so should fail", 0.0)
+
+    with pytest.raises(ValueError):
+        pm.ProtoParameter("fail!", 0.0)
 
     pm.ProtoParameter("test1_test", 0.0)
-
-    assert_value_exception(lambda: pm.ProtoParameter("test1_test", 0.0), False)
 
 
 def test_set_value():
