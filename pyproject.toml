@@ -47,6 +47,7 @@ no-cov = "cov --no-cov {args}"
 python = ["37", "38", "39", "310", "311"]
 
 [tool.coverage.run]
+source_pkgs = ["paramanager", "tests"]
 branch = true
 parallel = true
 omit = [
