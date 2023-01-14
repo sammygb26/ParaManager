@@ -70,6 +70,16 @@ class ParameterSet:
     def __str__(self):
         return f"{[str(p) for p in self.parameters.values()]}"
 
+    def pretty_print(self):
+        print()
+        if self.name:
+            print(f"[{self.name}]")
+        for p in self.proto_parameters:
+            if p.required and not p.set:
+                print(f"{p.name} -> NOT SET")
+            else:
+                print(f"{p.name} -> {str(p.value)}")
+
     def update_parameters(self):
         for p in self.proto_parameters:
             self.parameters[p.name] = p()
