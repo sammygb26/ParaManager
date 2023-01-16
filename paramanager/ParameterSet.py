@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime
+from typing import Any
 
 from .ProtoParameter import ProtoParameter
 from .Parameter import Parameter
@@ -67,10 +68,24 @@ class ParameterSet:
 
         self.update_parameters()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{[str(p) for p in self.parameters.values()]}"
 
-    def pretty_print(self):
+    def __getitem__(self, parameter_name: str) -> Any:
+        if parameter_name in self.parameters:
+            return self.parameters[parameter_name].value
+
+    def __setitem__(self, name: str, value: Any):
+        for p in self.proto_parameters:
+            if name not in p.pseudonyms:
+                continue
+            p.set_value(value)
+            self.parameters[p.name] = p()
+
+    def get_all(self, *parameter_names: str) -> list[Any]:
+        return [self[name] for name in parameter_names]
+
+    def pretty_print(self) -> None:
         print()
         if self.name:
             print(f"[{self.name}]")
@@ -80,31 +95,19 @@ class ParameterSet:
             else:
                 print(f"{p.name} -> {str(p.value)}")
 
-    def update_parameters(self):
+    def update_parameters(self) -> None:
         for p in self.proto_parameters:
             self.parameters[p.name] = p()
 
-    def get_unset_required_proto_parameters(self):
+    def get_unset_required_proto_parameters(self) -> list[ProtoParameter]:
         return [p for p in self.proto_parameters if p.required and not p.set]
 
-    def check_unset_parameters(self):
+    def check_unset_parameters(self) -> None:
         unset_required = self.get_unset_required_proto_parameters()
         if unset_required:
             for p in unset_required:
                 print(f"{p.name} not set, can use pseudonyms {p.pseudonyms}")
             raise ValueError(f"Required parameters '{[p.name for p in unset_required]}' not set.")
-
-    def put(self, name: str, val: str):
-        for p in self.proto_parameters:
-            if name not in p.pseudonyms:
-                continue
-            p.set_value(val)
-            self.parameters[p.name] = p()
-
-
-    def get(self, parameter_name: str):
-        if parameter_name in self.parameters:
-            return self.parameters[parameter_name].value
 
     def write_file(self, filename: str):
         version = get_last_version_of_file(read_file_lines(filename)) + 1
@@ -130,7 +133,7 @@ class ParameterSet:
 
             if not name.startswith("-"):
                 continue
-            self.put(name.removeprefix("-"), val)
+            self.__setitem__(name.removeprefix("-"), val)
 
         if check_unset_parameters:
             self.check_unset_parameters()
@@ -144,7 +147,7 @@ class ParameterSet:
         if len(line.split(":")) != 2:
             return
 
-        self.put(*line.split(":"))
+        self.__setitem__(*line.split(":"))
 
     def read_file(self, filename: str, check_unset_parameters: bool = True):
         lines = read_file_lines(filename)

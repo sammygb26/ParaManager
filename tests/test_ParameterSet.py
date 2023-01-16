@@ -28,3 +28,16 @@ def test_required_parameter():
 
     ps.read_argv(args=[], check_unset_parameters=False)
     ps.read_argv(args=["-required", "0.0"])
+
+
+def test_get_all():
+    proto_parameter = [
+        pm.ProtoParameter("a", 0.0),
+        pm.ProtoParameter("b", 1.0),
+        pm.ProtoParameter("c", 2.0)
+    ]
+
+    ps = pm.ParameterSet(proto_parameter)
+
+    assert ps.get_all("a", "b", "c") == [0.0, 1.0, 2.0]
+    assert ps.get_all("d", "c", "a") == [None, 2.0, 0.0]
